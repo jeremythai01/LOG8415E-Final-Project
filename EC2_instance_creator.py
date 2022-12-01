@@ -1,12 +1,31 @@
 import boto3
 import constant
+import random
+import os
 
 class EC2Creator:
     """Instance creator used to configure and spin up an Amazon EC2 instance."""
     def __init__(self):
         """Constructor"""
         self.client = boto3.client('ec2')
+        self.keypair = self.generate_key_pair()
         self.open_ssh_port()
+
+
+    def generate_key_pair(self):
+        keypair = self.client.create_key_pair(KeyName='keypair' + str(random.randint(0,1000)))
+        keyname = keypair['KeyName']+ ".pem"
+        with open(keyname, 'w') as private_key_file:
+            private_key_file.write(keypair['KeyMaterial'])
+
+        # Change keypair permission
+        os.system("chmod 400 " + keyname)
+        return keypair
+
+
+    def wait_for_running_confirmation(self, instance_id):
+        waiter = self.client.get_waiter('instance_running')
+        waiter.wait(InstanceIds=[instance_id])
 
 
     def get_instance_dns(self, instance_id):
