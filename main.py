@@ -152,8 +152,8 @@ thread_2.join()
 thread_3.join()
 
 # EXECUTE CLUSTER MANAGER SCRIPT MANUALLY
-print(f"""Run manually the setup_cluster_mysql.sh script in the manager server.\n\
-STEP 1: Open a new terminal and run: \
+print(f"""Run manually the setup_cluster_mysql.sh script in the manager server:\n\
+STEP 1: Open a new terminal in project file directory and run: \
 'ssh -i {private_keyfile} {constant.USERNAME}@{manager_public_dns}'\n\
 STEP 2: Once connected, run 'sh setup_cluster_mysql.sh' """)
 input("Once the script is successfully executed, press enter to continue: ")
@@ -178,3 +178,28 @@ standalone_remote_client.get_file(
     remote_filepath='benchmark_results.txt',
     local_filepath='results/standalone_benchmark_results.txt', 
 )
+
+print('Creating instance for Proxy...')
+proxy_instance_id = ec2_creator.create_instance(
+    availability_zone=constant.US_EAST_1A,
+    instance_type='t2.large')
+print(f'Instance {proxy_instance_id} is running!')
+
+proxy_public_dns, proxy_private_dns = ec2_creator.get_instance_dns(proxy_instance_id)
+print(proxy_public_dns, proxy_private_dns)
+
+proxy_client = RemoteClient(
+    hostname=proxy_public_dns, 
+    username=constant.USERNAME, 
+    private_keyfile=private_keyfile
+)
+
+proxy_client.upload_file(local_filepath='setups/setup_proxy.sh', remote_filepath='/home/ubuntu/setup_proxy.sh')
+proxy_client.upload_file(local_filepath=private_keyfile, remote_filepath=f'/home/ubuntu/{private_keyfile}')
+proxy_client.upload_file(local_filepath='database_connector.py', remote_filepath='/home/ubuntu/database_connector.py')
+proxy_client.upload_file(local_filepath='proxy.py', remote_filepath='/home/ubuntu/proxy.py')
+
+print(f"""Run manually proxy script in the proxy server:\n\
+STEP 1: Open a new terminal in project file directory and run: \
+'ssh -i {private_keyfile} {constant.USERNAME}@{proxy_public_dns}'\n\
+STEP 2: Once connected, run 'sh setup_proxy.sh && sudo python3 proxy.py {private_keyfile} {manager_private_dns} {node1_private_dns} {node2_private_dns} {node3_private_dns}'""")
