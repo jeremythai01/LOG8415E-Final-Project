@@ -2,15 +2,16 @@ from database_connector import DBConnector
 from sshtunnel import SSHTunnelForwarder
 from pythonping import ping
 import random
+import sys
 
 class Proxy:
 
-    def __init__(self, manager_pdns, node1_pdns, node2_pdns, node3_pdns, pkey):
+    def __init__(self, pkey, manager_pdns, node1_pdns, node2_pdns, node3_pdns):
+        self.pkey = pkey
         self.manager_pdns = manager_pdns
         self.node1_pdns = node1_pdns
         self.node2_pdns = node2_pdns
         self.node3_pdns = node3_pdns
-        self.pkey = pkey
 
 
     def forward_request(self, target_host, query):
@@ -36,9 +37,37 @@ class Proxy:
         
 
     # Customize: Measure ping for all server and choose the one with the smallest response time
-    def customize(self, query):
+    def customized(self, query):
 
         nodes = [self.node1_pdns, self.node2_pdns, self.node3_pdns]
         avg_latencies = [self.ping_host(host) for host in nodes]
         fastest_node = nodes[avg_latencies.index(min(avg_latencies))]
         self.forward_request(fastest_node, query)
+
+
+
+if __name__ == "__main__":
+    pkey = sys.argv[1]
+    manager_pdns = sys.argv[2]
+    node1_pdns = sys.argv[3]
+    node2_pdns = sys.argv[4]
+    node3_pdns = sys.argv[5]
+
+    proxy = Proxy(
+        pkey,
+        manager_pdns, 
+        node1_pdns, 
+        node2_pdns, 
+        node3_pdns
+    )
+
+    query = 'SELECT COUNT(*) FROM actor;'
+
+    print("DIRECT HIT:")
+    proxy.direct_hit(query)
+
+    print("RANDOM:")
+    proxy.random(query)
+
+    print("LOWEST RESPONSE TIME:")
+    proxy.customized(query)
