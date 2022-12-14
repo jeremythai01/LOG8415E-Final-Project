@@ -12,7 +12,7 @@ sudo apt-get install -y sysbench
 # Create test table sbtest1
 sudo sysbench \
 oltp_insert \
---table-size=1000 \
+--table-size=10000 \
 --mysql-db=sakila \
 --mysql-user=root \
 prepare
@@ -20,7 +20,7 @@ prepare
 # Run benchmarking
 sudo sysbench \
 oltp_read_write \
---table-size=1000 \
+--table-size=10000 \
 --db-driver=mysql \
 --mysql-db=sakila \
 --mysql-user=root \
