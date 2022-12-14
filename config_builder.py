@@ -89,6 +89,7 @@ ndb-connectstring={self.manager_pdns}  # location of cluster manager"""
 [mysqld]
 # Options for mysqld process:
 ndbcluster                      # run NDB storage engine
+bind-address=0.0.0.0
 
 [mysql_cluster]
 # Options for NDB Cluster processes:
