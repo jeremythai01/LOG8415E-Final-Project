@@ -2,15 +2,19 @@ import paramiko
 import time
 
 class RemoteClient:
-
     def __init__(self, hostname, username, private_keyfile):
         private_key = paramiko.RSAKey.from_private_key_file(private_keyfile)
         self.ssh_client = paramiko.SSHClient()
         self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        time.sleep(30)
-
-        self.ssh_client.connect(hostname=hostname, username=username, pkey=private_key)
+        # Set timeout and retry connecting to the instance until it is successful
+        while True:
+            try:
+                self.ssh_client.connect(hostname=hostname, username=username, pkey=private_key)
+            except paramiko.ssh_exception.NoValidConnectionsError as e:
+                time.sleep(5)
+            else:
+                break
 
         # Open SFTP 
         self.ftp_client=self.ssh_client.open_sftp()
@@ -34,5 +38,3 @@ class RemoteClient:
 
     def upload_file(self, local_filepath, remote_filepath):
         self.ftp_client.put(local_filepath, remote_filepath)
-
-
