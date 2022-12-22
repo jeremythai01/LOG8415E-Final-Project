@@ -1,6 +1,19 @@
 class ConfigBuilder:
-
+    """Config builder used to prepare and store required configs for setting up mysql cluster."""
     def __init__(self, manager_pdns, node1_pdns, node2_pdns, node3_pdns):
+        """Constructor
+        
+        Parameters
+        ----------
+        manager_pdns :  string
+                        Private DNS of cluster manager
+        node1_pdns :    string
+                        Private DNS of first cluster data node 
+        node2_pdns :    string
+                        Private DNS of second cluster data node
+        node3_pdns :    string
+                        Private DNS of third cluster data node
+        """
         self.manager_pdns = manager_pdns
         self.node1_pdns = node1_pdns
         self.node2_pdns = node2_pdns
@@ -8,7 +21,7 @@ class ConfigBuilder:
 
 
     def build_manager_config(self):
-
+        """Prepare and store config file for cluster manager."""
         content = f"""[ndbd default]
 # Options affecting ndbd processes on all data nodes:
 NoOfReplicas=3	# Number of replicas
@@ -43,7 +56,7 @@ hostname={self.manager_pdns} # In our case the MySQL server/client is on the sam
     
 
     def build_node_config(self):
-        
+        """Prepare and store config file for cluster data node."""
         content = f"""[mysql_cluster]
 # Options for NDB Cluster processes:
 ndb-connectstring={self.manager_pdns}  # location of cluster manager"""
@@ -55,7 +68,7 @@ ndb-connectstring={self.manager_pdns}  # location of cluster manager"""
 
     
     def build_mysql_config(self):
-
+        """Prepare and store config file for manager mysql server in cluster."""
         content = f"""# as published by the Free Software Foundation.
 #
 # This program is also distributed with certain software (including
