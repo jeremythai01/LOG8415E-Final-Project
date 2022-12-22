@@ -1,11 +1,12 @@
 from database_connector import DBConnector
 from sshtunnel import SSHTunnelForwarder
 from pythonping import ping
+import constant
 import random
+import os
 import sys
 
 class Proxy:
-
     def __init__(self, pkey, manager_pdns, node1_pdns, node2_pdns, node3_pdns):
         self.pkey = pkey
         self.manager_pdns = manager_pdns
@@ -15,59 +16,56 @@ class Proxy:
 
 
     def forward_request(self, target_host, query):
-        with SSHTunnelForwarder(target_host, ssh_username='ubuntu', ssh_pkey=self.pkey, remote_bind_address=(self.manager_pdns, 3306)) as tunnel:
+        with SSHTunnelForwarder(target_host, ssh_username=constant.USERNAME, ssh_pkey=self.pkey, remote_bind_address=(self.manager_pdns, constant.MYSQL_PORT)) as tunnel:
             DBConnector(self.manager_pdns).execute_query(query)     
 
         
     def direct_hit(self, query):
+        print(f"Chosen node: {self.manager_pdns}")
         self.forward_request(self.manager_pdns, query)
 
-
-    # Random: randomly choose a slave node 
-    def random(self, query):
-
-        # Choose randomly a slave node
+    
+    def random_hit(self, query):
+        # Choose randomly a data node
         target_host = random.choice([self.node1_pdns, self.node2_pdns, self.node3_pdns])
-
+        print(f"Chosen node: {target_host}")
         self.forward_request(target_host, query)
 
 
-    def ping_host(self, host):
-        return ping(target=host, count=1, timeout=2).rtt_avg_ms
+    def ping_server(self, server_pdns):
+        return ping(target=server_pdns, count=1, timeout=2).rtt_avg_ms
         
 
-    # Customize: Measure ping for all server and choose the one with the smallest response time
-    def customized(self, query):
-
+   
+    def custom_hit(self, query):
         nodes = [self.node1_pdns, self.node2_pdns, self.node3_pdns]
-        avg_latencies = [self.ping_host(host) for host in nodes]
+        avg_latencies = [self.ping_server(host) for host in nodes]
+
+        # Custom: Measure ping for all server and choose the one with the lowest response time
         fastest_node = nodes[avg_latencies.index(min(avg_latencies))]
+        print(f"Chosen node: {fastest_node}")
         self.forward_request(fastest_node, query)
 
 
-
 if __name__ == "__main__":
-    pkey = sys.argv[1]
-    manager_pdns = sys.argv[2]
-    node1_pdns = sys.argv[3]
-    node2_pdns = sys.argv[4]
-    node3_pdns = sys.argv[5]
 
-    proxy = Proxy(
-        pkey,
-        manager_pdns, 
-        node1_pdns, 
-        node2_pdns, 
-        node3_pdns
-    )
+    # Get env variables
+    pkey = os.getenv('KEYPAIR')
+    manager_pdns = os.getenv('MANAGER_PRIVATE_DNS')
+    node1_pdns = os.getenv('NODE1_PRIVATE_DNS')
+    node2_pdns = os.getenv('NODE2_PRIVATE_DNS')
+    node3_pdns = os.getenv('NODE3_PRIVATE_DNS')
 
-    query = 'SELECT COUNT(*) FROM actor;'
+    # Get passed request
+    request = sys.argv[1]
+
+    proxy = Proxy(pkey, manager_pdns, node1_pdns, node2_pdns, node3_pdns)
 
     print("DIRECT HIT:")
-    proxy.direct_hit(query)
+    proxy.direct_hit(request)
 
     print("RANDOM:")
-    proxy.random(query)
+    proxy.random_hit(request)
 
     print("LOWEST RESPONSE TIME:")
-    proxy.customized(query)
+    proxy.custom_hit(request)
