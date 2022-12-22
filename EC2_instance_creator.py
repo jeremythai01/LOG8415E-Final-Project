@@ -13,6 +13,12 @@ class EC2Creator:
 
 
     def generate_key_pair(self):
+        """Generate and store key pair used to SSH into EC2 instances.
+
+        Returns
+        -------
+        keypair : generated key pair
+        """
         keypair = self.client.create_key_pair(KeyName='keypair' + str(random.randint(0,1000)))
         keyname = keypair['KeyName']+ ".pem"
         with open(keyname, 'w') as private_key_file:
@@ -24,12 +30,30 @@ class EC2Creator:
 
 
     def wait_for_running_confirmation(self, instance_id):
+        """Wait until EC2 instance of specified id is running.
+        
+        Parameters
+        ----------
+        instance_id :   string
+                        Identification of EC2 instance
+        """
         waiter = self.client.get_waiter('instance_running')
         waiter.wait(InstanceIds=[instance_id])
 
 
     def get_instance_dns(self, instance_id):
+        """Fetch public and private dns of specified instance id.
+        
+        Parameters
+        ----------
+        instance_id :   string
+                        Identification of EC2 instance
 
+        Returns
+        -------
+        public_dns_name : associated public dns of EC2 instance
+        private_dns_name : associated private dns of EC2 instance
+        """
         # Confirm that instance is running successfully
         self.wait_for_running_confirmation(instance_id)
 
@@ -38,14 +62,11 @@ class EC2Creator:
         for reservation in response['Reservations']:
             for instance in reservation['Instances']:
                 if instance['InstanceId'] == instance_id:
-
-                    
-
                     return instance['PublicDnsName'], instance['PrivateDnsName']
         return None
         
 
-    def create_instance(self, availability_zone, instance_type, launch_script=None):
+    def create_instance(self, availability_zone, instance_type):
         """Run a request to create an instance from parameters and saves their id.
         
         Parameters
@@ -103,14 +124,6 @@ class EC2Creator:
     
         return instance_id
     
-
-
-    def terminate_instance(self):
-        """Shut down the created instance."""
-
-        # Termination function that terminates the running instance
-        self.client.terminate_instances(InstanceIds=[self.instance_id])
-
     
     def open_ssh_port(self):
         """Open the port 22 on the default security group."""
