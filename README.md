@@ -2,8 +2,7 @@
 
 ## Steps
 1. Install the pre-requisites (see report)
-
-2.Run the following commands:
+2. Run the following commands:
 
 ```bash
 git clone https://github.com/jeremythai01/LOG8415E-Final-Project
