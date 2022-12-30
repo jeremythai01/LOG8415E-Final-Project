@@ -1,4 +1,5 @@
-# LOG8415E-Final-Project: Scaling Databases and Implementing Cloud Patterns
+# LOG8415E-Final-Project
+Scaling Databases and Implementing Cloud Patterns
 
 ## Steps
 1. Install the pre-requisites (see report)
