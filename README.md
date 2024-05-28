@@ -2,7 +2,7 @@
 Scaling Databases and Implementing Cloud Patterns
 
 ## Steps
-1. Install the pre-requisites (see [report](https://drive.google.com/file/d/1r50aN7N_DI0Bo_dihQTibXMMb_OVm6Zg/view)
+1. Install the pre-requisites (see [report](https://drive.google.com/file/d/1r50aN7N_DI0Bo_dihQTibXMMb_OVm6Zg/view))
 2. Run the following commands:
 
 ```bash
